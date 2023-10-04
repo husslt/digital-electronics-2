@@ -15,7 +15,9 @@
 /* Defines -----------------------------------------------------------*/
 #define LED_GREEN PB5   // PB5 is AVR pin where green on-board LED
                         // is connected
-#define LED_RED PB0     // Off-board LED
+//#define LED_RED PB0     // Off-board LED
+#define LED_2COLOR_1 PB0
+#define LED_2COLOR_2 PB1
 #define SHORT_DELAY 250 // Delay in milliseconds
 #ifndef F_CPU
 # define F_CPU 16000000 // CPU frequency in Hz required for delay funcs
@@ -25,7 +27,7 @@
 /* Includes ----------------------------------------------------------*/
 #include <avr/io.h>     // AVR device-specific IO definitions
 #include <util/delay.h> // Functions for busy-wait delay loops
-//#include <gpio.h>       // GPIO library for AVR-GCC
+#include <gpio.h>       // GPIO library for AVR-GCC
 
 
 // -----
@@ -34,6 +36,7 @@
 //#include "Arduino.h"
 #define PB5 5          // In Arduino world, PB5 is called "13"
 #define PB0 0
+#define PB1 1
 // -----
 
 
@@ -50,8 +53,36 @@ int main(void)
     // Set pins where LEDs are connected as output
     // Ver 1: Arduino style
 
+    /*
+    // Infinite loop
+    while (1)
+    {
+        // Pause several milliseconds
+        _delay_ms(SHORT_DELAY);
+
+        // Change LED value
+        if (led_value == 0) {
+            led_value = 1;
+            // Set pin(s) to HIGH
+            digitalWrite(LED_GREEN, HIGH);
+            digitalWrite(LED_RED, HIGH);
+        }
+        else {
+            led_value = 0;
+            // Clear pin(s) to LOW
+            digitalWrite(LED_GREEN, LOW);
+            digitalWrite(LED_RED, LOW);
+        }
+    }
+
+    // Will never reach this
+    return 0;
+    */
+    /*
     // Ver 2: Low-level (register) style
-  
+    DDRB |= (1<<LED_GREEN);
+    DDRB |= (1<<LED_RED);
+    
         // Infinite loop
     while (1)
     {
@@ -62,21 +93,49 @@ int main(void)
         if (led_value == 0) {
             led_value = 1;
             // Set pin(s) to HIGH
-            DDRB |= (1<<LED_GREEN);
-            DDRB |= (1<<LED_RED);
+            PORTB |= (1<<LED_GREEN);
+            PORTB |= (1<<LED_RED);
             
         }
         else {
             led_value = 0;
             // Clear pin(s) to LOW
-            DDRB &= ~(0<<LED_GREEN);
-            DDRB &= ~(0<<LED_RED);
+            PORTB &= ~(1<<LED_GREEN);
+            PORTB &= ~(1<<LED_RED);
 
         }
     }
-    
+    */
     // Ver 3: Library function style
+    GPIO_mode_output(&DDRB, LED_GREEN);
+    //GPIO_mode_output(&DDRB, LED_RED);
+    GPIO_mode_output(&DDRB, LED_2COLOR_1);
+    GPIO_mode_output(&DDRB, LED_2COLOR_2);
+    
+        // Infinite loop
+    while (1)
+    {
+        // Pause several milliseconds
+        _delay_ms(SHORT_DELAY);
 
-    // Infinite loop
+        // Change LED value
+        if (led_value == 0) {
+            led_value = 1;
+            // Set pin(s) to HIGH
+            GPIO_write_high(&PORTB, LED_GREEN);
+            //GPIO_write_high(&PORTB, LED_RED);
+            GPIO_write_high(&PORTB, LED_2COLOR_1);
+            GPIO_write_low(&PORTB, LED_2COLOR_2);
+            
+        }
+        else {
+            led_value = 0;
+            // Clear pin(s) to LOW
+            GPIO_write_low(&PORTB, LED_GREEN);
+            //GPIO_write_low(&PORTB, LED_RED);
+            GPIO_write_low(&PORTB, LED_2COLOR_1);
+            GPIO_write_high(&PORTB, LED_2COLOR_2);
 
+        }
+    }
 }
