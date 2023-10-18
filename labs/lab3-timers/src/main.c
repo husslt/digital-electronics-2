@@ -76,7 +76,7 @@ ISR(TIMER0_OVF_vect)
     static uint8_t no_of_overflows = 0;
 
     no_of_overflows++;
-    if (no_of_overflows >= 61)
+    if (no_of_overflows >= 255)
     {
         // Do this every 6 x 16 ms = 100 ms
         no_of_overflows = 0;
