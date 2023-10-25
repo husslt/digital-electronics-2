@@ -61,8 +61,8 @@ int main(void)
     */
     uart_puts("\x1b[1;31;47m");  // 4: underline style; 32: green foreground
     uart_puts("REDREDRED\r\n");
-    //uart_puts("\x1b[0m");     // 0: reset all attributes
-    //uart_puts("This is Normal text again\r\n");
+    uart_puts("\x1b[0m");     // 0: reset all attributes
+    uart_puts("This is Normal text again\r\n");
 
     // Infinite loop
     while (1)
@@ -91,17 +91,23 @@ ISR(TIMER1_OVF_vect)
     if (value != '\0') {  // Data available from UART
         // Display ASCII code of received character
         // WRITE YOUR CODE HERE
+        uart_putc(value);
+        uart_putc(' ');
         itoa(value, string, 10);
+        uart_puts("\x1b[31m"); // red text
         uart_puts("Dec: ");
         uart_puts(string);
         itoa(value, string, 16);
         uart_putc(' ');
+        uart_puts("\x1b[32m"); // green text
         uart_puts("Hex: 0x");
         uart_puts(string);
         itoa(value, string, 2);
         uart_putc(' ');
+        uart_puts("\x1b[34m"); // blue text
         uart_puts("Bin: 0b");
         uart_puts(string);
+        uart_puts("\x1b[0m"); // normal text
         uart_puts("\r\n");
     }
 }
