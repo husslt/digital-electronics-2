@@ -139,7 +139,6 @@ int main(void)
             oled_puts(string);
 
             oled_display();
-            oled_clear_buffer();
             // Do not print it again and wait for the new data
             new_sensor_data = 0;
         }
