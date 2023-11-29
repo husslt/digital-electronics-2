@@ -16,7 +16,7 @@
 #include <avr/io.h>         // AVR device-specific IO definitions
 #include <avr/interrupt.h>  // Interrupts standard C library for AVR-GCC
 #include "timer.h"          // Timer library for AVR-GCC
-#include <lcd.h>            // Peter Fleury's LCD library
+#include <oled.h>
 #include <stdlib.h>         // C library. Needed for number conversions
 
 
@@ -29,41 +29,43 @@
  **********************************************************************/
 int main(void)
 {
-    // Initialize display
-    lcd_init(LCD_DISP_ON);
-    lcd_gotoxy(1, 0); lcd_puts("value:");
-    lcd_gotoxy(3, 1); lcd_puts("key:");
-    lcd_gotoxy(8, 0); lcd_puts("a");  // Put ADC value in decimal
-    lcd_gotoxy(13,0); lcd_puts("b");  // Put ADC value in hexadecimal
-    lcd_gotoxy(8, 1); lcd_puts("c");  // Put button name here
+    oled_init(OLED_DISP_ON);
+    oled_clrscr();
 
-    // Configure Analog-to-Digital Convertion unit
-    // Select ADC voltage reference to "AVcc with external capacitor at AREF pin"
+    oled_gotoxy(0,0);
+    oled_puts("BIN: ");
+    oled_charMode(DOUBLESIZE);
+    oled_gotoxy(0,2);
+    oled_puts("DEC: ");
+    oled_gotoxy(0,4);
+    oled_puts("PCT: ");
+    //oled_puts("OLED disp.");
 
-    // Select input channel ADC0 (voltage divider pin)
+    //oled_charMode(NORMALSIZE);
 
-    // Enable ADC module
+    // oled_gotoxy(x, y)
+    //oled_gotoxy(0, 2);
+    //oled_puts("128x64, SHH1106");
 
-    // Enable conversion complete interrupt
+    // oled_drawLine(x1, y1, x2, y2, color)
+    //oled_drawLine(0, 25, 120, 25, WHITE);
 
-    // Set clock prescaler to 128
+    //oled_gotoxy(0, 4);
+    //oled_puts("BPC-DE2, Brno");
 
+    // Copy buffer to display RAM
+    oled_display();
 
-    // Configure 16-bit Timer/Counter1 to start ADC conversion
-    // Set prescaler to 33 ms and enable overflow interrupt
+    TIM1_OVF_1SEC
+    TIM1_OVF_ENABLE
+    
 
-
-    // Enables interrupts by setting the global interrupt mask
     sei();
 
-    // Infinite loop
-    while (1)
-    {
-        /* Empty loop. All subsequent operations are performed exclusively 
-         * inside interrupt service routines ISRs */
+    while (1) {
+        ;
     }
 
-    // Will never reach this
     return 0;
 }
 
@@ -76,19 +78,42 @@ int main(void)
 ISR(TIMER1_OVF_vect)
 {
     // Start ADC conversion
+    ADMUX &= ~(1<<REFS0); ADMUX |= (1<<REFS0); // Set reference Vref to AVCC, REFS1 = 0, REFS0 = 1
+    ADMUX &= ~((1<<MUX3) | (1<<MUX2) | (1<<MUX1) | (1<<MUX0)); // Set ADC input source to ADC0, MUX3:0 = 0000
+    ADMUX &= ~(1<<ADLAR); // Set result register to be right adjusted, ADLAR = 0
+    //ADMUX |= (1<<ADLAR); // Set result register ADCH:ADCL to be left adjusted, ADLAR = 1
+    ADCSRA |= (1<<ADEN); // Enable ADC conversion, ADEN = 1
+    ADCSRA |= (1<<ADIE); // Enable ADC interrupt, ADIE = 1
+    ADCSRA &= ~((1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0)); // Set frequency division factor to 128, Arduino Uno clock = 16 MHz, ADC clock has to be between 50 and 200 kHz
+    ADCSRA |= (1<<ADSC); // Start ADC conversion
+
 }
 
 /**********************************************************************
  * Function: ADC complete interrupt
  * Purpose:  Display converted value on LCD screen.
  **********************************************************************/
+
 ISR(ADC_vect)
 {
     uint16_t value;
-    char string[4];  // String for converted numbers by itoa()
-
-    // Read converted value
-    // Note that, register pair ADCH and ADCL can be read as a 16-bit value ADC
+    uint8_t pct;
+    uint16_t max = 1024;
+    uint16_t min = 0;
+    char string[4];
+    char pct_string[3];  
     value = ADC;
-    // Convert "value" to "string" and display it
+    pct = (value-min)/(max-min) *100;
+    oled_charMode(NORMALSIZE);
+    itoa(value, string, 2);
+    oled_gotoxy(4,0);
+    oled_puts(string);
+    oled_charMode(DOUBLESIZE);
+    oled_gotoxy(8,2);
+    itoa(value, string, 10);
+    oled_puts(string);
+    oled_gotoxy(8,4);
+    itoa(pct, pct_string, 10);
+    oled_puts(pct_string);
+    oled_display();
 }

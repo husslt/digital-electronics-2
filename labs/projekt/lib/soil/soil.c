@@ -9,7 +9,7 @@ ISR(ADC_vect) {
 
 uint16_t get_tank_level() {
     
-    volatile uint16_t result; // variable to be modified by interrupt
+    uint16_t result; // variable to be modified by interrupt
     ADMUX &= ~(1<<REFS0); ADMUX |= (1<<REFS0); // Set reference Vref to AVCC, REFS1 = 0, REFS0 = 1
     ADMUX &= ~((1<<MUX3) | (1<<MUX2) | (1<<MUX1) | (1<<MUX0)); // Set ADC input source to ADC0, MUX3:0 = 0000
     ADMUX &= ~(1<<ADLAR); // Set result register to be right adjusted, ADLAR = 0
