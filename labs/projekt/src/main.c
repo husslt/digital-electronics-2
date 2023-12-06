@@ -16,10 +16,11 @@
 #include <avr/io.h>         // AVR device-specific IO definitions
 #include <avr/interrupt.h>  // Interrupts standard C library for AVR-GCC
 #include "timer.h"          // Timer library for AVR-GCC
-#include <lcd.h>
+#include <oled.h>
 #include <stdlib.h>         // C library. Needed for number conversions
 #include <soil.h>  
 #include <stdio.h>
+#include <gpio.h>
 
 /* Function definitions ----------------------------------------------*/
 /**********************************************************************
@@ -34,12 +35,14 @@
 
 int main(void)
 {
-    lcd_init(LCD_DISP_ON);
-    lcd_gotoxy(0,0);
-    lcd_puts("SOIL: ");
-    lcd_gotoxy(0,1);
-    lcd_puts("TANK: ");
-
+    oled_init(OLED_DISP_ON);
+    oled_clrscr();
+    oled_charMode(NORMALSIZE);
+    oled_gotoxy(0,0);
+    oled_puts("SOIL: ");
+    oled_gotoxy(0,1);
+    oled_puts("ADCTANK: ");
+    oled_display();
     TIM1_OVF_1SEC
     TIM1_OVF_ENABLE
     
@@ -64,11 +67,18 @@ ISR(TIMER1_OVF_vect)
     uint8_t tank = getTankLevelPercentage();
     char string[3];
     itoa(soil, string, 10);
-    lcd_gotoxy(6,0);
-    lcd_puts(string);
+    oled_gotoxy(6,0);
+    oled_puts(string);
     itoa(tank, string, 10);
-    lcd_gotoxy(6,1);
-    lcd_puts(string);
+    oled_gotoxy(9,1);
+    oled_puts(string);
+    oled_display();
+    if (tank < 50) {
+        pumpTurnOn();
+    }
+    if (tank > 50) {
+        pumpTurnOff();
+    }
 }
 
 
